@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:padding="5dip" >
+
+    <!-- ListRow left-sided face image -->
+
+    <LinearLayout
+        android:id="@+id/lThumbnail"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_marginRight="5dip"
+        android:padding="3dip" >
+
+        <ImageView
+            android:id="@+id/contactImage"
+            android:layout_width="50dip"
+            android:layout_height="50dip"
+            android:contentDescription="Facephone" />
+    </LinearLayout>
+
+    <!-- Contact name -->
+
+    <TextView
+        android:id="@+id/contactName"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignTop="@id/lThumbnail"
+        android:layout_toLeftOf="@+id/rThumbnail"
+        android:layout_toRightOf="@id/lThumbnail"
+        android:text="@string/contact_name"
+        android:textColor="#040404"
+        android:textIsSelectable="true"
+        android:textSize="14sp"
+        android:textStyle="bold"
+        android:typeface="sans" />
+
+    <!-- Field to be used -->
+
+    <TextView
+        android:id="@+id/contactDetails"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/contactName"
+        android:layout_marginTop="1dip"
+        android:layout_toLeftOf="@id/rThumbnail"
+        android:layout_toRightOf="@id/lThumbnail"
+        android:text="Field to be used..."
+        android:textColor="#343434"
+        android:textSize="10sp" />
+
+    <TextView
+        android:id="@+id/contactID"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/contactDetails"
+        android:layout_marginTop="1dip"
+        android:layout_toLeftOf="@id/rThumbnail"
+        android:layout_toRightOf="@id/lThumbnail"
+        android:text="Field to be used..."
+        android:textColor="#343434"
+        android:textSize="10sp" />
+
+    <!-- ListRow right-sided face image -->
+
+    <LinearLayout
+        android:id="@id/rThumbnail"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentRight="true"
+        android:layout_marginLeft="5dip"
+        android:padding="3dip" >
+
+        <ImageView
+            android:id="@+id/facebookImage"
+            android:layout_width="50dip"
+            android:layout_height="50dip"
+            android:contentDescription="Facebook" />
+    </LinearLayout>
+
+</RelativeLayout>
