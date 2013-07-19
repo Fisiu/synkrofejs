@@ -8,18 +8,35 @@
     android:paddingTop="@dimen/activity_vertical_margin"
     tools:context=".MainActivity" >
 
-    <TextView
-        android:id="@+id/firstLabel"
+    <RelativeLayout
+        android:id="@+id/contactListHeader"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_centerHorizontal="true"
-        android:text="@string/hello_world" />
+        android:layout_marginBottom="2dp"
+        android:background="@android:color/holo_green_light" >
+
+        <TextView
+            android:id="@+id/headerImgSystem"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentTop="true"
+            android:text="@string/hello_world" />
+
+        <TextView
+            android:id="@+id/headerImgFacebook"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentRight="true"
+            android:layout_alignParentTop="true"
+            android:text="@string/hello_world" />
+    </RelativeLayout>
 
     <ListView
         android:id="@+id/contactsList"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
-        android:layout_below="@id/firstLabel"
+        android:layout_below="@id/contactListHeader"
         android:divider="#b5b5b5"
         android:dividerHeight="1dp" />
 

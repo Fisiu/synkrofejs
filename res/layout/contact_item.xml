@@ -31,6 +31,7 @@
         android:layout_alignTop="@id/lThumbnail"
         android:layout_toLeftOf="@+id/rThumbnail"
         android:layout_toRightOf="@id/lThumbnail"
+        android:focusable="false"
         android:text="@string/contact_name"
         android:textColor="#040404"
         android:textIsSelectable="true"
@@ -42,24 +43,26 @@
 
     <TextView
         android:id="@+id/contactDetails"
-        android:layout_width="fill_parent"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_below="@id/contactName"
         android:layout_marginTop="1dip"
         android:layout_toLeftOf="@id/rThumbnail"
         android:layout_toRightOf="@id/lThumbnail"
+        android:focusable="false"
         android:text="Field to be used..."
         android:textColor="#343434"
         android:textSize="10sp" />
 
     <TextView
         android:id="@+id/contactID"
-        android:layout_width="fill_parent"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_below="@id/contactDetails"
         android:layout_marginTop="1dip"
         android:layout_toLeftOf="@id/rThumbnail"
         android:layout_toRightOf="@id/lThumbnail"
+        android:focusable="false"
         android:text="Field to be used..."
         android:textColor="#343434"
         android:textSize="10sp" />
@@ -67,7 +70,7 @@
     <!-- ListRow right-sided face image -->
 
     <LinearLayout
-        android:id="@id/rThumbnail"
+        android:id="@+id/rThumbnail"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentRight="true"

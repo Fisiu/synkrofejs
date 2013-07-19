@@ -3,15 +3,23 @@ package pl.fidano.android.synkrofejs;
 import android.app.Activity;
 import android.database.Cursor;
 import android.os.Bundle;
+import android.provider.Contacts.People;
+import android.provider.Contacts.Phones;
 import android.provider.ContactsContract;
-import android.support.v4.widget.SimpleCursorAdapter;
 import android.util.Log;
 import android.view.Menu;
+import android.view.View;
+import android.widget.AdapterView;
+import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ListAdapter;
 import android.widget.ListView;
+import android.widget.SimpleCursorAdapter;
 import android.widget.TextView;
+import android.widget.Toast;
 
 public class MainActivity extends Activity {
+
+    private ListAdapter adapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -20,17 +28,27 @@ public class MainActivity extends Activity {
 
 	Log.i(getClass().getSimpleName(), "onCreate()");
 
-	TextView label = (TextView) findViewById(R.id.firstLabel);
-	label.setText("Text set during runtime :)");
+	TextView headerImgSystem = (TextView) findViewById(R.id.headerImgSystem);
+	TextView headerImgFacebook = (TextView) findViewById(R.id.headerImgFacebook);
 
-	ListView lv = (ListView) findViewById(R.id.contactsList);
+	final ListView lv = (ListView) findViewById(R.id.contactsList);
 
+	String sortOrder = ContactsContract.Contacts.DISPLAY_NAME + " COLLATE LOCALIZED ASC";
 	Cursor cursor = getContentResolver().query(ContactsContract.CommonDataKinds.Phone.CONTENT_URI, null, null,
-		null, null);
-	ListAdapter adapter = new SimpleCursorAdapter(this, R.layout.contact_item, cursor, new String[] {
+		null, sortOrder);
+	adapter = new SimpleCursorAdapter(this, R.layout.contact_item, cursor, new String[] {
 		ContactsContract.Contacts.DISPLAY_NAME, ContactsContract.CommonDataKinds.Email.DISPLAY_NAME,
 		ContactsContract.Contacts._ID }, new int[] { R.id.contactName, R.id.contactDetails, R.id.contactID }, 0);
 	lv.setAdapter(adapter);
+	lv.setOnItemClickListener(new OnItemClickListener() {
+
+	    @Override
+	    public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+		Cursor cursor = (Cursor) lv.getItemAtPosition(position);
+		String name = cursor.getString(cursor.getColumnIndex("display_name"));
+		Toast.makeText(getBaseContext(), name, Toast.LENGTH_SHORT).show();
+	    }
+	});
 
     }
 
@@ -40,5 +58,4 @@ public class MainActivity extends Activity {
 	getMenuInflater().inflate(R.menu.main, menu);
 	return true;
     }
-
 }
