@@ -40,6 +40,7 @@ public class MainActivity extends FragmentActivity implements LoaderManager.Load
         headerImgFacebook.setText(R.string.label_facebook);
 
         contactsListView = (ListView) findViewById(R.id.contactsList);
+        contactsListView.setFastScrollEnabled(true);
 
         contactsAdapter = new ContactsAdapter(this);
         contactsListView.setAdapter(contactsAdapter);
