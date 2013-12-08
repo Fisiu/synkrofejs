@@ -2,9 +2,11 @@ package pl.fidano.android.synkrofejs;
 
 import android.content.ContentUris;
 import android.content.Context;
+import android.content.res.Resources;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.drawable.BitmapDrawable;
 import android.net.Uri;
 import android.provider.ContactsContract;
 import android.provider.ContactsContract.Contacts;
@@ -51,7 +53,14 @@ public class ContactsAdapter extends CursorAdapter {
         final String email = getEmailAddress(id);
 
         final long contactId = Long.parseLong(id);
-        final Bitmap image = BitmapFactory.decodeStream(openPhoto(contactId));
+        final InputStream is = openPhoto(contactId);
+        final Bitmap image;
+        if (is == null) {
+            // use default image when no image set
+            image = BitmapFactory.decodeResource(context.getResources(), R.drawable.ic_contact_picture);
+        } else {
+            image = BitmapFactory.decodeStream(is);
+        }
 
         idView.setText(number);
         nameView.setText(name);
