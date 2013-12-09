@@ -6,4 +6,7 @@
     <string name="hello_world">Hello world!</string>
     <string name="contact_name">Contact Name</string>
 
+    <string name="label_phone">Phone</string>
+    <string name="label_facebook">Facebook</string>
+
 </resources>

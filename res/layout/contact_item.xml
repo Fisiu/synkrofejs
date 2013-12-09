@@ -3,7 +3,7 @@
     android:layout_width="fill_parent"
     android:layout_height="wrap_content"
     android:orientation="horizontal"
-    android:padding="5dip" >
+    android:padding="1dip" >
 
     <!-- ListRow left-sided face image -->
 
@@ -13,7 +13,7 @@
         android:layout_height="wrap_content"
         android:layout_alignParentLeft="true"
         android:layout_marginRight="5dip"
-        android:padding="3dip" >
+        android:padding="1dip" >
 
         <ImageView
             android:id="@+id/contactImage"
@@ -75,7 +75,7 @@
         android:layout_height="wrap_content"
         android:layout_alignParentRight="true"
         android:layout_marginLeft="5dip"
-        android:padding="3dip" >
+        android:padding="1dip" >
 
         <ImageView
             android:id="@+id/facebookImage"

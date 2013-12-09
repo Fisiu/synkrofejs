@@ -23,3 +23,7 @@ local.properties
 # proguard file
 proguard-project.txt
 
+# Android Studio project files
+synkrofejs.iml
+.idea
+
