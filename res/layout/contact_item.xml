@@ -50,7 +50,6 @@
         android:layout_toLeftOf="@id/rThumbnail"
         android:layout_toRightOf="@id/lThumbnail"
         android:focusable="false"
-        android:text="Field to be used..."
         android:textColor="#343434"
         android:textSize="10sp" />
 
@@ -63,7 +62,6 @@
         android:layout_toLeftOf="@id/rThumbnail"
         android:layout_toRightOf="@id/lThumbnail"
         android:focusable="false"
-        android:text="Field to be used..."
         android:textColor="#343434"
         android:textSize="10sp" />
 
