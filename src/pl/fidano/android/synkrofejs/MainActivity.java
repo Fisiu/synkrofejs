@@ -97,8 +97,8 @@ public class MainActivity extends FragmentActivity implements LoaderManager.Load
 			contactsListView.setEmptyView(progressBar);
 
 			final Uri contentUri = ContactsQuery.CONTENT_URI;
-			return new CursorLoader(getApplication(), contentUri, null, ContactsQuery.SELECTION, null,
-					ContactsQuery.SORT_ORDER);
+			return new CursorLoader(getApplication(), contentUri, ContactsQuery.PROJECTION, ContactsQuery.SELECTION,
+					null, ContactsQuery.SORT_ORDER);
 		}
 
 		Log.d(TAG, "onCreateLoader - incorrect ID provided (" + id + ")");
@@ -136,10 +136,12 @@ public class MainActivity extends FragmentActivity implements LoaderManager.Load
 		// The projection for the CursorLoader query. This is a list of columns
 		// that the Contacts
 		// Provider should return in the Cursor.
-		final static String[] PROJECTION = { Contacts._ID, Contacts.LOOKUP_KEY };
+		final static String[] PROJECTION = { Contacts._ID, Contacts.LOOKUP_KEY,
+				Utils.hasHoneycomb() ? Contacts.DISPLAY_NAME_PRIMARY : Contacts.DISPLAY_NAME };
 
 		// The query column numbers which map to each value in the projection
-		final static int ID = 0;
-		final static int LOOKUP_KEY = 1;
+		static final int ID = 0;
+		static final int LOOKUP_KEY = 1;
+		static final int DISPLAY_NAME = 2;
 	}
 }

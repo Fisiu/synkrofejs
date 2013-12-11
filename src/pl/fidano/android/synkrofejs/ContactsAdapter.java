@@ -37,14 +37,12 @@ public class ContactsAdapter extends CursorAdapter {
 
 	@Override
 	public void bindView(View view, Context context, Cursor cursor) {
-		TextView idView = (TextView) view.findViewById(R.id.contactID);
 		TextView nameView = (TextView) view.findViewById(R.id.contactName);
-		TextView detailsView = (TextView) view.findViewById(R.id.contactDetails);
 		ImageView photoView = (ImageView) view.findViewById(R.id.contactImage);
 
 		// set data
-		final String id = cursor.getString(cursor.getColumnIndex(Contacts._ID));
-		final String name = cursor.getString(cursor.getColumnIndex(Contacts.DISPLAY_NAME));
+		final String id = cursor.getString(MainActivity.ContactsQuery.ID);
+		final String name = cursor.getString(MainActivity.ContactsQuery.DISPLAY_NAME);
 
 		final long contactId = Long.parseLong(id);
 		final InputStream is = openPhoto(contactId);
@@ -79,5 +77,6 @@ public class ContactsAdapter extends CursorAdapter {
 			cursor.close();
 		}
 		return null;
+
 	}
 }
