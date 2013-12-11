@@ -1,12 +1,18 @@
 package pl.fidano.android.synkrofejs;
 
+import java.util.Arrays;
+
 import pl.fidano.android.synkrofejs.Utils.Utils;
+import pl.fidano.android.synkrofejs.dialog.AccountsDialogFragment;
+import pl.fidano.android.synkrofejs.dialog.AccountsDialogFragment.AccountsDialogListener;
+import android.accounts.Account;
+import android.accounts.AccountManager;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.ContactsContract.Contacts;
 import android.support.v4.app.FragmentActivity;
-import android.support.v4.app.LoaderManager;
+import android.support.v4.app.LoaderManager.LoaderCallbacks;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
 import android.util.Log;
@@ -20,9 +26,13 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
-public class MainActivity extends FragmentActivity implements LoaderManager.LoaderCallbacks<Cursor> {
+public class MainActivity extends FragmentActivity implements LoaderCallbacks<Cursor>, AccountsDialogListener {
 
 	private static final String TAG = "MainActivity";
+
+	private static final String ACCOUNT_TYPE = "com.google";
+	public static final String BUNDLE_KEY = "accounts";
+	CharSequence[] accountNames;
 
 	private RelativeLayout header;
 	private ProgressBar progressBar;
@@ -44,15 +54,18 @@ public class MainActivity extends FragmentActivity implements LoaderManager.Load
 		headerImgFacebook.setText(R.string.label_facebook);
 
 		header = (RelativeLayout) findViewById(R.id.contactListHeader);
+		header.setVisibility(View.INVISIBLE);
+
 		progressBar = (ProgressBar) findViewById(R.id.contactProgressBar);
 
 		contactsListView = (ListView) findViewById(R.id.contactsList);
 		contactsListView.setFastScrollEnabled(true);
+		contactsListView.setEmptyView(null);
 
 		contactsAdapter = new ContactsAdapter(this);
 		contactsListView.setAdapter(contactsAdapter);
 
-		getSupportLoaderManager().initLoader(1, null, this);
+		showAccountDialog();
 
 		contactsListView.setOnItemClickListener(new OnItemClickListener() {
 
@@ -93,7 +106,6 @@ public class MainActivity extends FragmentActivity implements LoaderManager.Load
 		// (the only one supported)
 		if (id == ContactsQuery.QUERY_ID) {
 
-			header.setVisibility(View.INVISIBLE);
 			contactsListView.setEmptyView(progressBar);
 
 			final Uri contentUri = ContactsQuery.CONTENT_URI;
@@ -144,4 +156,37 @@ public class MainActivity extends FragmentActivity implements LoaderManager.Load
 		static final int LOOKUP_KEY = 1;
 		static final int DISPLAY_NAME = 2;
 	}
+
+	private void showAccountDialog() {
+		AccountsDialogFragment accountsDialog = new AccountsDialogFragment();
+		Bundle args = new Bundle();
+		args.putCharSequenceArray(BUNDLE_KEY, getGoogleAccounts());
+		accountsDialog.setArguments(args);
+		accountsDialog.show(getSupportFragmentManager(), "TAG");
+	}
+
+	private CharSequence[] getGoogleAccounts() {
+		AccountManager manager = AccountManager.get(this);
+		Account[] accounts = manager.getAccountsByType(ACCOUNT_TYPE);
+		accountNames = new CharSequence[accounts.length];
+		for (int i = 0; i < accounts.length; i++) {
+			accountNames[i] = accounts[i].name;
+		}
+		return accountNames;
+	}
+
+	@Override
+	public void onAccountSelected(int accountEmail) {
+		Toast.makeText(this, accountNames[accountEmail], Toast.LENGTH_SHORT).show();
+		// TODO: Setup cursorloader to fetch contacts for selected account only
+		getSupportLoaderManager().initLoader(1, null, this);
+	}
+
+	@Override
+	public void onNegativeButtonClick() {
+		// no account chosen, exit app
+		Toast.makeText(this, "Exiting...", Toast.LENGTH_SHORT).show();
+		this.finish();
+	}
+
 }

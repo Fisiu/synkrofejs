@@ -9,4 +9,6 @@
     <string name="label_phone">Phone</string>
     <string name="label_facebook">Facebook</string>
 
+    <string name="title_account_dialog">Select account</string>
+
 </resources>
