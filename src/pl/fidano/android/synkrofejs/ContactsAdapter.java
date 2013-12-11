@@ -11,6 +11,7 @@ import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.provider.ContactsContract.Contacts;
 import android.support.v4.widget.CursorAdapter;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -20,23 +21,28 @@ import android.widget.TextView;
 public class ContactsAdapter extends CursorAdapter {
 
 	private static final String TAG = "ContactsAdapter";
+
 	private Context context;
+	private LayoutInflater layoutInflater;
 
 	public ContactsAdapter(Context context) {
 		super(context, null, 0);
 		this.context = context;
+		layoutInflater = LayoutInflater.from(context);
 	}
 
 	@Override
 	public View newView(Context context, Cursor cursor, ViewGroup viewGroup) {
-		LayoutInflater layoutInflater = LayoutInflater.from(context);
-		View rootView = layoutInflater.inflate(R.layout.contact_item, viewGroup, false);
+		Log.d(TAG, "newView()");
 
+		View rootView = layoutInflater.inflate(R.layout.contact_item, viewGroup, false);
 		return rootView;
 	}
 
 	@Override
 	public void bindView(View view, Context context, Cursor cursor) {
+		Log.d(TAG, "bindView()");
+
 		TextView nameView = (TextView) view.findViewById(R.id.contactName);
 		ImageView photoView = (ImageView) view.findViewById(R.id.contactImage);
 
