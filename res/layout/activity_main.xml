@@ -40,4 +40,22 @@
         android:divider="#b5b5b5"
         android:dividerHeight="1dp" />
 
+    <TextView
+        android:id="@+id/emptyList"
+        style="@android:style/TextAppearance.Medium"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:gravity="center"
+        android:text="@string/label_no_contacts"
+        android:visibility="gone" >
+    </TextView>
+    <!-- android:padding="@dimen/padding_large" -->
+
+    <ProgressBar
+        android:id="@+id/loading"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true"
+        android:visibility="gone" />
+
 </RelativeLayout>

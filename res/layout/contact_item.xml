@@ -19,6 +19,7 @@
             android:id="@+id/contactImage"
             android:layout_width="50dip"
             android:layout_height="50dip"
+            android:background="@drawable/ic_contact_picture"
             android:contentDescription="Facephone" />
     </LinearLayout>
 
@@ -42,7 +43,7 @@
     <!-- Field to be used -->
 
     <TextView
-        android:id="@+id/contactDetails"
+        android:id="@+id/contactPhone"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_below="@id/contactName"
@@ -55,10 +56,10 @@
         android:textSize="10sp" />
 
     <TextView
-        android:id="@+id/contactID"
+        android:id="@+id/contactEmail"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_below="@id/contactDetails"
+        android:layout_below="@id/contactPhone"
         android:layout_marginTop="1dip"
         android:layout_toLeftOf="@id/rThumbnail"
         android:layout_toRightOf="@id/lThumbnail"
@@ -81,7 +82,8 @@
             android:id="@+id/facebookImage"
             android:layout_width="50dip"
             android:layout_height="50dip"
-            android:contentDescription="Facebook" />
+            android:contentDescription="Facebook"
+            android:src="@drawable/ic_facebook_blank" />
     </LinearLayout>
 
 </RelativeLayout>

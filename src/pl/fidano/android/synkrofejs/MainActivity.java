@@ -1,171 +1,300 @@
 package pl.fidano.android.synkrofejs;
 
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
+import pl.fidano.android.synkrofejs.Utils.Utils;
+import pl.fidano.android.synkrofejs.model.Contact;
+import android.content.ContentUris;
 import android.database.Cursor;
+import android.graphics.Bitmap;
+import android.graphics.Bitmap.Config;
+import android.graphics.BitmapFactory;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Bundle;
-import android.provider.ContactsContract;
 import android.provider.ContactsContract.Contacts;
 import android.support.v4.app.FragmentActivity;
-import android.support.v4.app.LoaderManager;
-import android.support.v4.content.CursorLoader;
-import android.support.v4.content.Loader;
 import android.util.Log;
+import android.util.SparseArray;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
+import android.widget.BaseAdapter;
+import android.widget.ImageView;
 import android.widget.ListView;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import pl.fidano.android.synkrofejs.Utils.Utils;
+public class MainActivity extends FragmentActivity {
 
-public class MainActivity extends FragmentActivity implements LoaderManager.LoaderCallbacks<Cursor> {
+	private static final String TAG = "MainActivity";
 
-    private static final String TAG = "MainActivity";
-    private ListView contactsListView;
-    private ContactsAdapter contactsAdapter;
+	private static final String ACCOUNT_TYPE = "com.google";
+	private static final String MY_CONTACTS_GROUP = "6";
 
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+	private Drawable unchangedThumb;
+	private Drawable defaultThumb;
+	private SparseArray<Drawable> thumbCache;
 
-        Log.i(getClass().getSimpleName(), "onCreate()");
+	private ListView contactsListView;
+	private ContactsAdapter contactsAdapter;
 
-        TextView headerImgSystem = (TextView) findViewById(R.id.headerImgSystem);
-        TextView headerImgFacebook = (TextView) findViewById(R.id.headerImgFacebook);
+	private TextView emptyList;
+	private ProgressBar progressBar;
 
-        headerImgSystem.setText(R.string.label_phone);
-        headerImgFacebook.setText(R.string.label_facebook);
+	private LoadContactsTask contactsLoader;
 
-        contactsListView = (ListView) findViewById(R.id.contactsList);
-        contactsListView.setFastScrollEnabled(true);
+	@Override
+	protected void onCreate(Bundle savedInstanceState) {
+		super.onCreate(savedInstanceState);
+		setContentView(R.layout.activity_main);
+		Log.i(getClass().getSimpleName(), "onCreate()");
 
-        contactsAdapter = new ContactsAdapter(this);
-        contactsListView.setAdapter(contactsAdapter);
+		unchangedThumb = new BitmapDrawable(getResources(), Bitmap.createBitmap(1, 1, Config.ALPHA_8));
+		defaultThumb = getResources().getDrawable(R.drawable.ic_contact_picture);
+		thumbCache = new SparseArray<Drawable>();
 
-        getSupportLoaderManager().initLoader(1, null, this);
+		TextView headerImgSystem = (TextView) findViewById(R.id.headerImgSystem);
+		headerImgSystem.setText(R.string.label_phone);
 
-        contactsListView.setOnItemClickListener(new OnItemClickListener() {
+		TextView headerImgFacebook = (TextView) findViewById(R.id.headerImgFacebook);
+		headerImgFacebook.setText(R.string.label_facebook);
 
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                final Cursor cursor = contactsAdapter.getCursor();
-                cursor.moveToPosition(position);
+		contactsListView = (ListView) findViewById(R.id.contactsList);
+		emptyList = (TextView) findViewById(R.id.emptyList);
+		progressBar = (ProgressBar) findViewById(R.id.loading);
 
-                // Creates a contact lookup Uri from contact ID and lookup_key
-                final long contactId = cursor.getLong(cursor.getColumnIndex(Contacts._ID));
-                final String contactLookupKey = cursor.getString(cursor.getColumnIndex(Contacts.LOOKUP_KEY));
-                final Uri uri = Contacts.getLookupUri(contactId, contactLookupKey);
-                // TODO: Make use from contacts uri
+		contactsListView.setFastScrollEnabled(true);
+		contactsListView.setEmptyView(progressBar);
 
-                TextView name = (TextView) view.findViewById(R.id.contactName);
-                Toast.makeText(getBaseContext(), name.getText(), Toast.LENGTH_SHORT).show();
-            }
-        });
-    }
+		contactsAdapter = new ContactsAdapter();
+		contactsListView.setAdapter(contactsAdapter);
 
-    @Override
-    protected void onResume() {
-        super.onResume();
-        contactsAdapter.notifyDataSetChanged();
-    }
+		contactsListView.setOnItemClickListener(new OnItemClickListener() {
 
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.main, menu);
-        return true;
-    }
+			@Override
+			public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+				TextView name = (TextView) view.findViewById(R.id.contactName);
+				Toast.makeText(getBaseContext(), name.getText(), Toast.LENGTH_SHORT).show();
+			}
+		});
+	}
 
-    @Override
-    public Loader<Cursor> onCreateLoader(int id, Bundle bundle) {
-        Log.d(TAG, "onCreateLoader");
-        // If this is the loader for finding contacts in the Contacts Provider
-        // (the only one supported)
-        if (id == ContactsQuery.QUERY_ID) {
-            final Uri contentUri = ContactsQuery.CONTENT_URI;
-            return new CursorLoader(getApplication(),
-                    contentUri,
-                    null,
-                    ContactsQuery.SELECTION,
-                    null,
-                    ContactsQuery.SORT_ORDER);
-        }
+	@Override
+	protected void onResume() {
+		super.onResume();
+		contactsLoader = new LoadContactsTask();
+		// contactsLoader.execute("fisiu82@gmail.com");
+		contactsLoader.execute();
+	}
 
-        Log.d(TAG, "onCreateLoader - incorrect ID provided (" + id + ")");
-        return null;
-    }
+	@Override
+	public boolean onCreateOptionsMenu(Menu menu) {
+		// Inflate the menu; this adds items to the action bar if it is present.
+		getMenuInflater().inflate(R.menu.main, menu);
+		return true;
+	}
 
-    @Override
-    public void onLoadFinished(Loader<Cursor> cursorLoader, Cursor cursor) {
-        contactsAdapter.swapCursor(cursor);
-    }
+	private class LoadContactsTask extends AsyncTask<String, Void, List<Contact>> {
 
-    @Override
-    public void onLoaderReset(Loader<Cursor> cursorLoader) {
-        contactsAdapter.swapCursor(null);
-    }
+		@Override
+		protected List<Contact> doInBackground(String... params) {
+			Cursor contactCursor = getContentResolver().query(ContactQuery.CONTENT_URI, ContactQuery.PROJECTION,
+					ContactQuery.SELECTION, null, ContactQuery.SORT_ORDER);
+			if (contactCursor == null)
+				return null;
 
-    public interface ContactsQuery {
+			try {
+				List<Contact> contacts = new ArrayList<Contact>();
+				while (contactCursor.moveToNext()) {
+					Contact contact = new Contact();
+					contact.setContactId(contactCursor.getInt(ContactQuery.ID));
+					contact.setDisplayName(contactCursor.getString(ContactQuery.DISPLAY_NAME));
+					contacts.add(contact);
+				}
+				return contacts;
+			} finally {
+				contactCursor.close();
+			}
+		}
 
-        // An identifier for the loader
-        final static int QUERY_ID = 1;
-        // A content URI for the Contacts table
-        final static Uri CONTENT_URI = Contacts.CONTENT_URI;
-        // The selection clause for the CursorLoader query. The search criteria defined here
-        // restrict results to contacts that have a display name and are linked to visible groups.
-        // Notice that the search on the string provided by the user is implemented by appending
-        // the search string to CONTENT_FILTER_URI.
-        // FIXME: Select only contacts in phone, ignore those on sim card
-        final static String SELECTION =
-                (Utils.hasHoneycomb() ? Contacts.DISPLAY_NAME_PRIMARY : Contacts.DISPLAY_NAME) +
-                        "<>''" + " AND " + Contacts.IN_VISIBLE_GROUP + "=1";
-        // The desired sort order for the returned Cursor. In Android 3.0 and later, the primary
-        // sort key allows for localization. In earlier versions. use the display name as the sort
-        // key.
-        final static String SORT_ORDER =
-                Utils.hasHoneycomb() ? Contacts.SORT_KEY_PRIMARY : Contacts.DISPLAY_NAME;
-        // The projection for the CursorLoader query. This is a list of columns that the Contacts
-        // Provider should return in the Cursor.
-        final static String[] PROJECTION = {
+		@Override
+		protected void onPostExecute(List<Contact> result) {
+			if (result != null) {
+				contactsAdapter.update(result);
+			}
+			// FIXME we don't have to do this every time!
+			progressBar.setProgress(100);
+			// contactsListView.setEmptyView(emptyList);
+		}
 
-                // The contact's row id
-                Contacts._ID,
+	}
 
-                // A pointer to the contact that is guaranteed to be more permanent than _ID. Given
-                // a contact's current _ID value and LOOKUP_KEY, the Contacts Provider can generate
-                // a "permanent" contact URI.
-                Contacts.LOOKUP_KEY,
+	private interface ContactQuery {
+		static final Uri CONTENT_URI = Contacts.CONTENT_URI;
+		static final String SELECTION = (Utils.hasHoneycomb() ? Contacts.DISPLAY_NAME_PRIMARY : Contacts.DISPLAY_NAME)
+				+ "<>''" + " AND " + Contacts.IN_VISIBLE_GROUP + "=1" + " AND " + Contacts.HAS_PHONE_NUMBER + "=1";
+		static final String SORT_ORDER = Utils.hasHoneycomb() ? Contacts.SORT_KEY_PRIMARY : Contacts.DISPLAY_NAME;
+		static final String[] PROJECTION = { Contacts._ID, Contacts.LOOKUP_KEY,
+				Utils.hasHoneycomb() ? Contacts.DISPLAY_NAME_PRIMARY : Contacts.DISPLAY_NAME };
 
-                // In platform version 3.0 and later, the Contacts table contains
-                // DISPLAY_NAME_PRIMARY, which either contains the contact's displayable name or
-                // some other useful identifier such as an email address. This column isn't
-                // available in earlier versions of Android, so you must use Contacts.DISPLAY_NAME
-                // instead.
-                Utils.hasHoneycomb() ? Contacts.DISPLAY_NAME_PRIMARY : Contacts.DISPLAY_NAME,
+		static final int ID = 0;
+		static final int DISPLAY_NAME = 2;
 
-                // TODO: Add email
-                ContactsContract.CommonDataKinds.Phone.NUMBER,
+	}
 
-                // In Android 3.0 and later, the thumbnail image is pointed to by
-                // PHOTO_THUMBNAIL_URI. In earlier versions, there is no direct pointer; instead,
-                // you generate the pointer from the contact's ID value and constants defined in
-                // android.provider.ContactsContract.Contacts.
-                //Utils.hasHoneycomb() ? Contacts.PHOTO_THUMBNAIL_URI : Contacts._ID,
-                Contacts.PHOTO_URI,
+	class LoadThumbTask extends AsyncTask<Integer, Void, Drawable> {
 
-                // The sort order column for the returned Cursor, used by the AlphabetIndexer
-                SORT_ORDER,
-        };
+		/**
+		 * Raw contact ID of the contact to load the thumbnail for.
+		 */
+		private int rawContactId;
 
-        // The query column numbers which map to each value in the projection
-        // final static int ID = 0;
-        // final static int LOOKUP_KEY = 1;
-        // final static int DISPLAY_NAME = 2;
-        // final static int PHONE_NUmBER = 3;
-        // final static int PHOTO_THUMBNAIL_DATA = 4;
-        // final static int SORT_KEY = 5;
-    }
+		@Override
+		protected Drawable doInBackground(Integer... params) {
+			rawContactId = params[0];
+			Bitmap bitmap = BitmapFactory.decodeStream(openPhoto(rawContactId));
+			if (isCancelled()) {
+				return null;
+			}
+			if (bitmap == null) {
+				return null;
+			}
+			Drawable drawable = new BitmapDrawable(getResources(), bitmap);
+			return drawable;
+		}
+
+		@Override
+		protected void onPostExecute(Drawable result) {
+			Log.d("LoadThumbTask", "onPostExecute()");
+			// asyncTasks.remove(this);
+			if (result != null) {
+				storeDrawableInCache(rawContactId, result);
+				// removeDiskCache(rawContactId);
+				contactsAdapter.notifyDataSetChanged();
+			}
+		}
+
+		private void storeDrawableInCache(int contactId, Drawable drawable) {
+			thumbCache.put(contactId, drawable);
+		}
+
+		public InputStream openPhoto(int contactId) {
+			Uri contactUri = ContentUris.withAppendedId(Contacts.CONTENT_URI, contactId);
+			Uri photoUri = Uri.withAppendedPath(contactUri, Contacts.Photo.CONTENT_DIRECTORY);
+			Cursor cursor = getContentResolver().query(photoUri, new String[] { Contacts.Photo.PHOTO }, null, null,
+					null);
+			if (cursor == null) {
+				return null;
+			}
+			try {
+				if (cursor.moveToFirst()) {
+					byte[] data = cursor.getBlob(0);
+					if (data != null) {
+						return new ByteArrayInputStream(data);
+					}
+				}
+			} finally {
+				cursor.close();
+			}
+			return null;
+		}
+
+	}
+
+	class ContactsAdapter extends BaseAdapter {
+
+		private LayoutInflater layoutInflater;
+		private List<Contact> items = Collections.emptyList();
+
+		public ContactsAdapter() {
+			layoutInflater = LayoutInflater.from(getBaseContext());
+		}
+
+		public void update(List<Contact> newItems) {
+			this.items = newItems;
+			notifyDataSetChanged();
+		}
+
+		public List<Contact> getContactList() {
+			return Collections.unmodifiableList(items);
+		}
+
+		@Override
+		public int getCount() {
+			return items.size();
+		}
+
+		@Override
+		public Contact getItem(int position) {
+			return items.get(position);
+		}
+
+		@Override
+		public long getItemId(int position) {
+			return position;
+		}
+
+		@Override
+		public View getView(int position, View convertView, ViewGroup parent) {
+			TextView nameView;
+			TextView phoneView;
+			TextView emailView;
+			ImageView photoView;
+
+			if (convertView == null) {
+				convertView = layoutInflater.inflate(R.layout.contact_item, null);
+				nameView = (TextView) convertView.findViewById(R.id.contactName);
+				phoneView = (TextView) convertView.findViewById(R.id.contactPhone);
+				emailView = (TextView) convertView.findViewById(R.id.contactEmail);
+				photoView = (ImageView) convertView.findViewById(R.id.contactImage);
+				convertView.setTag(new ViewHolder(position, nameView, phoneView, emailView, photoView));
+			} else {
+				ViewHolder viewHolder = (ViewHolder) convertView.getTag();
+				nameView = viewHolder.name;
+				phoneView = viewHolder.phone;
+				emailView = viewHolder.email;
+				photoView = viewHolder.photo;
+			}
+
+			Contact contact = getItem(position);
+			nameView.setText(contact.getDisplayName());
+
+			// TODO: bind the rest of data
+			Drawable thumb = thumbCache.get(contact.getContactId());
+			if (thumb == null) {
+				new LoadThumbTask().execute(contact.getContactId());
+			}
+			// thumb = thumbCache.get(contact.getContactId());
+			photoView.setImageDrawable(thumb);
+
+			return convertView;
+		}
+
+		private class ViewHolder {
+			int position;
+			TextView name;
+			TextView phone;
+			TextView email;
+			ImageView photo;
+
+			public ViewHolder(int position, TextView name, TextView phone, TextView email, ImageView photo) {
+				this.position = position;
+				this.name = name;
+				this.phone = phone;
+				this.email = email;
+				this.photo = photo;
+			}
+		}
+	}
 }
