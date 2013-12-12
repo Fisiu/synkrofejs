@@ -1,8 +1,5 @@
 package pl.fidano.android.synkrofejs;
 
-import java.util.Arrays;
-
-import pl.fidano.android.synkrofejs.Utils.Utils;
 import pl.fidano.android.synkrofejs.dialog.AccountsDialogFragment;
 import pl.fidano.android.synkrofejs.dialog.AccountsDialogFragment.AccountsDialogListener;
 import android.accounts.Account;
@@ -10,7 +7,9 @@ import android.accounts.AccountManager;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
-import android.provider.ContactsContract.Contacts;
+import android.provider.ContactsContract.CommonDataKinds.GroupMembership;
+import android.provider.ContactsContract.Data;
+import android.provider.ContactsContract.Groups;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.LoaderManager.LoaderCallbacks;
 import android.support.v4.content.CursorLoader;
@@ -31,8 +30,10 @@ public class MainActivity extends FragmentActivity implements LoaderCallbacks<Cu
 	private static final String TAG = "MainActivity";
 
 	private static final String ACCOUNT_TYPE = "com.google";
+	private static final String MY_CONTACTS_GROUP_ID = "6";
 	public static final String BUNDLE_KEY = "accounts";
-	CharSequence[] accountNames;
+	private CharSequence[] accountNames;
+	private static String selectedAccount;
 
 	private RelativeLayout header;
 	private ProgressBar progressBar;
@@ -71,13 +72,13 @@ public class MainActivity extends FragmentActivity implements LoaderCallbacks<Cu
 
 			@Override
 			public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-				final Cursor cursor = contactsAdapter.getCursor();
-				cursor.moveToPosition(position);
+				// final Cursor cursor = contactsAdapter.getCursor();
+				// cursor.moveToPosition(position);
 
 				// Creates a contact lookup Uri from contact ID and lookup_key
-				final long contactId = cursor.getLong(cursor.getColumnIndex(Contacts._ID));
-				final String contactLookupKey = cursor.getString(cursor.getColumnIndex(Contacts.LOOKUP_KEY));
-				final Uri uri = Contacts.getLookupUri(contactId, contactLookupKey);
+				// final long contactId = cursor.getLong(cursor.getColumnIndex(Contacts._ID));
+				// final String contactLookupKey = cursor.getString(cursor.getColumnIndex(Contacts.LOOKUP_KEY));
+				// final Uri uri = Contacts.getLookupUri(contactId, contactLookupKey);
 				// TODO: Make use from contacts uri
 
 				TextView name = (TextView) view.findViewById(R.id.contactName);
@@ -102,25 +103,71 @@ public class MainActivity extends FragmentActivity implements LoaderCallbacks<Cu
 	@Override
 	public Loader<Cursor> onCreateLoader(int id, Bundle bundle) {
 		Log.d(TAG, "onCreateLoader");
-		// If this is the loader for finding contacts in the Contacts Provider
-		// (the only one supported)
-		if (id == ContactsQuery.QUERY_ID) {
+
+		// TODO: Allow to display contacts from custom groups chosen by user.
+		if (id == QueryContactsInGroup.QUERY_ID) {
 
 			contactsListView.setEmptyView(progressBar);
-
-			final Uri contentUri = ContactsQuery.CONTENT_URI;
-			return new CursorLoader(getApplication(), contentUri, ContactsQuery.PROJECTION, ContactsQuery.SELECTION,
-					null, ContactsQuery.SORT_ORDER);
+			int groupId = getMyContactsGroupId();
+			return new CursorLoader(getApplication(), QueryContactsInGroup.CONTENT_URI,
+					QueryContactsInGroup.PROJECTION, QueryContactsInGroup.SELECTION + " = ?", new String[] { ""
+							+ groupId }, QueryContactsInGroup.SORT_ORDER);
 		}
 
 		Log.d(TAG, "onCreateLoader - incorrect ID provided (" + id + ")");
+		progressBar.setVisibility(View.GONE);
 		return null;
+	}
+
+	/**
+	 * Get "_id" of My Contacts group.
+	 * 
+	 * @return int with id of My Contacts group or -1 when not found such a group
+	 */
+	private int getMyContactsGroupId() {
+		Cursor myContactsGroupCursor = getContentResolver().query(QueryGroupMyContacts.CONTENT_URI,
+				QueryGroupMyContacts.PROJECTION, null, null, null);
+
+		int myContactsGroupsId = -1;
+		String sourceId = "";
+		try {
+			while (myContactsGroupCursor.moveToNext()) {
+				sourceId = myContactsGroupCursor.getString(QueryGroupMyContacts.GROUP_SOURCE_ID);
+				if (sourceId.equals(MY_CONTACTS_GROUP_ID)) {
+					myContactsGroupsId = myContactsGroupCursor.getInt(QueryGroupMyContacts.ID);
+					// we have My Contacts group id, don't search further
+					break;
+				}
+			}
+		} finally {
+			myContactsGroupCursor.close();
+		}
+		return myContactsGroupsId;
 	}
 
 	@Override
 	public void onLoadFinished(Loader<Cursor> cursorLoader, Cursor cursor) {
 		header.setVisibility(View.VISIBLE);
 		contactsAdapter.swapCursor(cursor);
+		// testCursor(cursor);
+	}
+
+	/** Simple method to check cursor structure and data */
+	@SuppressWarnings("unused")
+	private void testCursor(Cursor cursor) {
+		progressBar.setVisibility(View.GONE);
+		Log.d(TAG, "results: " + cursor.getCount() + ", cols: " + cursor.getColumnCount());
+		int n = 0;
+		while (cursor.moveToNext()) {
+			Log.d(TAG, "===========================================>");
+			if (n == 5)
+				break;
+			for (int i = 0; i < cursor.getColumnCount(); i++) {
+				Log.d(TAG, "" + cursor.getColumnName(i) + "[" + cursor.getColumnIndex(cursor.getColumnName(i)) + "]"
+						+ " : " + cursor.getString(i));
+			}
+			n++;
+		}
 	}
 
 	@Override
@@ -128,32 +175,36 @@ public class MainActivity extends FragmentActivity implements LoaderCallbacks<Cu
 		contactsAdapter.swapCursor(null);
 	}
 
-	public interface ContactsQuery {
+	/** cursor query parameters for "My Contacts" group */
+	public interface QueryGroupMyContacts {
+		static final int QUERY_ID = 2;
+		static final Uri CONTENT_URI = Groups.CONTENT_URI.buildUpon()
+				.appendQueryParameter(Groups.ACCOUNT_TYPE, ACCOUNT_TYPE)
+				.appendQueryParameter(Groups.ACCOUNT_NAME, selectedAccount).build();
+		/** List of column to return in cursor */
+		static final String[] PROJECTION = { Groups._ID, Groups.SOURCE_ID };
+		/** Selection allows to restrict results to defined criteria */
+		static final String SELECTION = null;
+		static final String SORT_ORDER = null;
 
-		// An identifier for the loader
-		final static int QUERY_ID = 1;
-		// A content URI for the Contacts table
-		final static Uri CONTENT_URI = Contacts.CONTENT_URI;
-		// The selection clause for the CursorLoader query. The search criteria
-		// defined here restrict results to contacts that have a display name
-		// and are linked to visible groups.
-		// Notice that the search on the string provided by the user is
-		// implemented by appending the search string to CONTENT_FILTER_URI.
-		final static String SELECTION = (Utils.hasHoneycomb() ? Contacts.DISPLAY_NAME_PRIMARY : Contacts.DISPLAY_NAME)
-				+ "<>''" + " AND " + Contacts.HAS_PHONE_NUMBER + "=1" + " AND " + Contacts.IN_VISIBLE_GROUP + "=1";
-		// The desired sort order for the returned Cursor. In Android 3.0 and
-		// later, the primary sort key allows for localization. In earlier
-		// versions. use the display name as the sort key.
-		final static String SORT_ORDER = Utils.hasHoneycomb() ? Contacts.SORT_KEY_PRIMARY : Contacts.DISPLAY_NAME;
-		// The projection for the CursorLoader query. This is a list of columns
-		// that the Contacts
-		// Provider should return in the Cursor.
-		final static String[] PROJECTION = { Contacts._ID, Contacts.LOOKUP_KEY,
-				Utils.hasHoneycomb() ? Contacts.DISPLAY_NAME_PRIMARY : Contacts.DISPLAY_NAME };
-
-		// The query column numbers which map to each value in the projection
 		static final int ID = 0;
-		static final int LOOKUP_KEY = 1;
+		static final int GROUP_SOURCE_ID = 1;
+	}
+
+	/** Cursor query parameters for 'contacts in chosen group' */
+	public interface QueryContactsInGroup {
+		static final int QUERY_ID = 1;
+		static final Uri CONTENT_URI = Data.CONTENT_URI.buildUpon()
+				.appendQueryParameter(Groups.ACCOUNT_TYPE, ACCOUNT_TYPE)
+				.appendQueryParameter(Groups.ACCOUNT_NAME, selectedAccount).build();
+		/** List of column to return in cursor */
+		static final String[] PROJECTION = { GroupMembership._ID, GroupMembership.CONTACT_ID,
+				GroupMembership.DISPLAY_NAME };
+		/** Restrict results for contacts with specified group */
+		static final String SELECTION = GroupMembership.GROUP_ROW_ID;
+		static final String SORT_ORDER = Data.SORT_KEY_PRIMARY;
+
+		static final int ID = 1;
 		static final int DISPLAY_NAME = 2;
 	}
 
@@ -178,8 +229,8 @@ public class MainActivity extends FragmentActivity implements LoaderCallbacks<Cu
 	@Override
 	public void onAccountSelected(int accountEmail) {
 		Toast.makeText(this, accountNames[accountEmail], Toast.LENGTH_SHORT).show();
-		// TODO: Setup cursorloader to fetch contacts for selected account only
-		getSupportLoaderManager().initLoader(1, null, this);
+		selectedAccount = (String) accountNames[accountEmail];
+		getSupportLoaderManager().initLoader(QueryContactsInGroup.QUERY_ID, null, this);
 	}
 
 	@Override
