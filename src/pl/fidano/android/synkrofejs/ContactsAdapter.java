@@ -3,6 +3,7 @@ package pl.fidano.android.synkrofejs;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 
+import pl.fidano.android.synkrofejs.MainActivity.QueryContactsInGroup;
 import android.content.ContentUris;
 import android.content.Context;
 import android.database.Cursor;
@@ -47,10 +48,9 @@ public class ContactsAdapter extends CursorAdapter {
 		ImageView photoView = (ImageView) view.findViewById(R.id.contactImage);
 
 		// set data
-		final String id = cursor.getString(MainActivity.ContactsQuery.ID);
-		final String name = cursor.getString(MainActivity.ContactsQuery.DISPLAY_NAME);
+		final long contactId = cursor.getLong(QueryContactsInGroup.ID);
+		final String name = cursor.getString(QueryContactsInGroup.DISPLAY_NAME);
 
-		final long contactId = Long.parseLong(id);
 		final InputStream is = openPhoto(contactId);
 		final Bitmap image;
 		if (is == null) {
