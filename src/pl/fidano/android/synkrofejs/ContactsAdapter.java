@@ -11,6 +11,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.provider.ContactsContract.Contacts;
+import android.support.v4.content.CursorLoader;
 import android.support.v4.widget.CursorAdapter;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -67,8 +68,9 @@ public class ContactsAdapter extends CursorAdapter {
 	private InputStream openPhoto(long contactId) {
 		Uri contactUri = ContentUris.withAppendedId(Contacts.CONTENT_URI, contactId);
 		Uri photoUri = Uri.withAppendedPath(contactUri, Contacts.Photo.CONTENT_DIRECTORY);
-		Cursor cursor = context.getContentResolver().query(photoUri, new String[] { Contacts.Photo.PHOTO }, null, null,
-				null);
+		CursorLoader cursorLoader = new CursorLoader(context, photoUri, new String[] { Contacts.Photo.PHOTO }, null,
+				null, null);
+		Cursor cursor = cursorLoader.loadInBackground();
 		if (cursor == null) {
 			return null;
 		}
