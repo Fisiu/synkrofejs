@@ -1,4 +1,4 @@
-package pl.fidano.android.synkrofejs.Utils;
+package pl.fidano.android.synkrofejs.utils;
 
 import android.os.Build;
 
