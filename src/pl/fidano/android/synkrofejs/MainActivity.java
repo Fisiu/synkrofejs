@@ -3,12 +3,15 @@ package pl.fidano.android.synkrofejs;
 import pl.fidano.android.synkrofejs.dialog.AccountsDialogFragment;
 import pl.fidano.android.synkrofejs.dialog.AccountsDialogFragment.AccountsDialogListener;
 import pl.fidano.android.synkrofejs.utils.ContactFaceTask;
+import pl.fidano.android.synkrofejs.utils.Utils;
 import android.accounts.Account;
 import android.accounts.AccountManager;
+import android.annotation.SuppressLint;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.ContactsContract.CommonDataKinds.GroupMembership;
+import android.provider.ContactsContract.Contacts;
 import android.provider.ContactsContract.Data;
 import android.provider.ContactsContract.Groups;
 import android.support.v4.app.FragmentActivity;
@@ -41,6 +44,7 @@ public class MainActivity extends FragmentActivity implements LoaderCallbacks<Cu
 
 	private ListView contactsListView;
 	private ContactsAdapter contactsAdapter;
+	private ContactFaceTask contactFaceTask;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -64,7 +68,8 @@ public class MainActivity extends FragmentActivity implements LoaderCallbacks<Cu
 		contactsListView.setFastScrollEnabled(true);
 		contactsListView.setEmptyView(null);
 
-		contactsAdapter = new ContactsAdapter(this, new ContactFaceTask(this));
+		contactFaceTask = new ContactFaceTask(this);
+		contactsAdapter = new ContactsAdapter(this, contactFaceTask);
 		contactsListView.setAdapter(contactsAdapter);
 
 		showAccountDialog();
@@ -92,6 +97,12 @@ public class MainActivity extends FragmentActivity implements LoaderCallbacks<Cu
 	protected void onResume() {
 		super.onResume();
 		contactsAdapter.notifyDataSetChanged();
+	}
+
+	@Override
+	protected void onDestroy() {
+		super.onDestroy();
+		contactFaceTask = null;
 	}
 
 	@Override
@@ -203,6 +214,7 @@ public class MainActivity extends FragmentActivity implements LoaderCallbacks<Cu
 				GroupMembership.DISPLAY_NAME };
 		/** Restrict results for contacts with specified group */
 		static final String SELECTION = GroupMembership.GROUP_ROW_ID;
+		@SuppressLint("InlinedApi")
 		static final String SORT_ORDER = Data.SORT_KEY_PRIMARY;
 
 		static final int ID = 1;
