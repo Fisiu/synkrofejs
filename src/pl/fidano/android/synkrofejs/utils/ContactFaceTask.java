@@ -84,23 +84,7 @@ public class ContactFaceTask {
 		@SuppressLint("InlinedApi")
 		private InputStream openPhoto(long contactId) {
 			Uri contactUri = ContentUris.withAppendedId(Contacts.CONTENT_URI, contactId);
-			Uri photoUri = Uri.withAppendedPath(contactUri, Contacts.Photo.CONTENT_DIRECTORY);
-			Cursor cursor = context.getContentResolver().query(photoUri, new String[] { Contacts.Photo.PHOTO }, null,
-					null, null);
-			if (cursor == null) {
-				return null;
-			}
-			try {
-				if (cursor.moveToFirst()) {
-					byte[] data = cursor.getBlob(0);
-					if (data != null) {
-						return new ByteArrayInputStream(data);
-					}
-				}
-			} finally {
-				cursor.close();
-			}
-			return null;
+			return Contacts.openContactPhotoInputStream(context.getContentResolver(), contactUri);
 		}
 	}
 }
