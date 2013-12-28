@@ -34,9 +34,10 @@
 
     <ListView
         android:id="@+id/contactsList"
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
         android:layout_below="@id/contactListHeader"
+        android:smoothScrollbar="false"
         android:divider="#b5b5b5"
         android:dividerHeight="1dp" />
 

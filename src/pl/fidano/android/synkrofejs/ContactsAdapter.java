@@ -1,16 +1,10 @@
 package pl.fidano.android.synkrofejs;
 
-import java.io.ByteArrayInputStream;
-import java.io.InputStream;
-
 import pl.fidano.android.synkrofejs.MainActivity.QueryContactsInGroup;
-import android.content.ContentUris;
+import pl.fidano.android.synkrofejs.utils.ContactFaceTask;
 import android.content.Context;
 import android.database.Cursor;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.net.Uri;
-import android.provider.ContactsContract.Contacts;
+import android.graphics.drawable.Drawable;
 import android.support.v4.widget.CursorAdapter;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -23,13 +17,13 @@ public class ContactsAdapter extends CursorAdapter {
 
 	private static final String TAG = "ContactsAdapter";
 
-	private Context context;
 	private LayoutInflater layoutInflater;
+	private ContactFaceTask faceWorker;
 
-	public ContactsAdapter(Context context) {
+	public ContactsAdapter(Context context, ContactFaceTask faceWorker) {
 		super(context, null, 0);
-		this.context = context;
 		layoutInflater = LayoutInflater.from(context);
+		this.faceWorker = faceWorker;
 	}
 
 	@Override
@@ -51,38 +45,14 @@ public class ContactsAdapter extends CursorAdapter {
 		final long contactId = cursor.getLong(QueryContactsInGroup.ID);
 		final String name = cursor.getString(QueryContactsInGroup.DISPLAY_NAME);
 
-		final InputStream is = openPhoto(contactId);
-		final Bitmap image;
-		if (is == null) {
-			// use default image when no image set
-			image = BitmapFactory.decodeResource(context.getResources(), R.drawable.ic_contact_picture);
+		Drawable dr = faceWorker.loadImage(this, contactId);
+		if (dr != null) {
+			photoView.setImageDrawable(dr);
 		} else {
-			image = BitmapFactory.decodeStream(is);
+			photoView.setImageResource(R.drawable.ic_contact_picture);
 		}
-
 		nameView.setText(name);
-		photoView.setImageBitmap(image);
 	}
-
-	private InputStream openPhoto(long contactId) {
-		Uri contactUri = ContentUris.withAppendedId(Contacts.CONTENT_URI, contactId);
-		Uri photoUri = Uri.withAppendedPath(contactUri, Contacts.Photo.CONTENT_DIRECTORY);
-		Cursor cursor = context.getContentResolver().query(photoUri, new String[] { Contacts.Photo.PHOTO }, null, null,
-				null);
-		if (cursor == null) {
-			return null;
-		}
-		try {
-			if (cursor.moveToFirst()) {
-				byte[] data = cursor.getBlob(0);
-				if (data != null) {
-					return new ByteArrayInputStream(data);
-				}
-			}
-		} finally {
-			cursor.close();
-		}
-		return null;
-
-	}
+	
+	
 }

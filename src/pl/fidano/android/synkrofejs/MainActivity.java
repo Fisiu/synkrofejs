@@ -2,6 +2,7 @@ package pl.fidano.android.synkrofejs;
 
 import pl.fidano.android.synkrofejs.dialog.AccountsDialogFragment;
 import pl.fidano.android.synkrofejs.dialog.AccountsDialogFragment.AccountsDialogListener;
+import pl.fidano.android.synkrofejs.utils.ContactFaceTask;
 import android.accounts.Account;
 import android.accounts.AccountManager;
 import android.database.Cursor;
@@ -63,7 +64,7 @@ public class MainActivity extends FragmentActivity implements LoaderCallbacks<Cu
 		contactsListView.setFastScrollEnabled(true);
 		contactsListView.setEmptyView(null);
 
-		contactsAdapter = new ContactsAdapter(this);
+		contactsAdapter = new ContactsAdapter(this, new ContactFaceTask(this));
 		contactsListView.setAdapter(contactsAdapter);
 
 		showAccountDialog();
