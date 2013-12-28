@@ -14,15 +14,16 @@ import android.widget.TextView;
 
 public class ContactsAdapter extends CursorAdapter {
 
+	@SuppressWarnings("unused")
 	private static final String TAG = "ContactsAdapter";
 
 	private LayoutInflater layoutInflater;
-	private ContactFaceTask faceWorker;
+	private ContactFaceTask contactFaceTask;
 
-	public ContactsAdapter(Context context, ContactFaceTask faceWorker) {
+	public ContactsAdapter(Context context, ContactFaceTask contactFaceTask) {
 		super(context, null, 0);
 		layoutInflater = LayoutInflater.from(context);
-		this.faceWorker = faceWorker;
+		this.contactFaceTask = contactFaceTask;
 	}
 
 	@Override
@@ -46,7 +47,7 @@ public class ContactsAdapter extends CursorAdapter {
 
 		holder.cName.setText(name);
 
-		final Bitmap bitmap = faceWorker.loadImage(this, contactId);
+		final Bitmap bitmap = contactFaceTask.loadImage(this, contactId);
 		holder.cImage.setImageBitmap(bitmap);
 	}
 
