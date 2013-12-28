@@ -1,13 +1,19 @@
 package pl.fidano.android.synkrofejs;
 
 import pl.fidano.android.synkrofejs.MainActivity.QueryContactsInGroup;
+import pl.fidano.android.synkrofejs.dialog.UserImageDialogFragment;
+import pl.fidano.android.synkrofejs.utils.Constans;
 import pl.fidano.android.synkrofejs.utils.ContactFaceTask;
 import android.content.Context;
 import android.database.Cursor;
 import android.graphics.Bitmap;
+import android.os.Bundle;
+import android.support.v4.app.DialogFragment;
+import android.support.v4.app.FragmentActivity;
 import android.support.v4.widget.CursorAdapter;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.View.OnClickListener;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -27,7 +33,7 @@ public class ContactsAdapter extends CursorAdapter {
 	}
 
 	@Override
-	public View newView(Context context, Cursor cursor, ViewGroup viewGroup) {
+	public View newView(final Context context, Cursor cursor, ViewGroup viewGroup) {
 		View rootView = layoutInflater.inflate(R.layout.contact_item, viewGroup, false);
 
 		ViewHolder holder = new ViewHolder();
@@ -38,7 +44,7 @@ public class ContactsAdapter extends CursorAdapter {
 	}
 
 	@Override
-	public void bindView(View view, Context context, Cursor cursor) {
+	public void bindView(View view, final Context context, Cursor cursor) {
 		ViewHolder holder = (ViewHolder) view.getTag();
 
 		// set data
@@ -49,6 +55,18 @@ public class ContactsAdapter extends CursorAdapter {
 
 		final Bitmap bitmap = contactFaceTask.loadImage(this, contactId);
 		holder.cImage.setImageBitmap(bitmap);
+		holder.cImage.setOnClickListener(new OnClickListener() {
+
+			@Override
+			public void onClick(View v) {
+				DialogFragment newFragment = new UserImageDialogFragment();
+				Bundle args = new Bundle();
+				args.putLong(Constans.BUNDLE_KEY_USER_ID, contactId);
+				newFragment.setArguments(args);
+				newFragment.show(((FragmentActivity) context).getSupportFragmentManager(), "");
+
+			}
+		});
 	}
 
 	private static class ViewHolder {
